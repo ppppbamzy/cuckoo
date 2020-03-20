@@ -697,6 +697,7 @@ public:
         zbucket<ZBUCKETSIZE> &zb = TRIMONV ? buckets[ux][vx] : buckets[vx][ux];
         const u8 *readbig = zb.bytes, *endreadbig = readbig + zb.size;
 // printf("id %d vx %d ux %d size %u\n", id, vx, ux, zb.size/SRCSIZE);
+        int cnt = 0;
         for (; readbig < endreadbig; readbig += SRCSIZE) {
 // bit        39..34    33..21     20..13     12..0
 // write      UYYYYY    UZZZZZ     VYYYYY     VZZZZ   within VX partition
@@ -706,9 +707,10 @@ public:
           const u32 vy = (e >> ZBITS) & YMASK;
 // bit     41/39..34    33..26     25..13     12..0
 // write      UXXXXX    UYYYYY     UZZZZZ     VZZZZ   within VX VY partition
-          *(u64 *)(small0+small.index[vy]) = ((u64)uxyz << ZBITS) | (e & ZMASK);
+          *(u64 *)(tbuckets[id+vy][0].bytes + cnt*DSTSIZE) = ((u64)uxyz << ZBITS) | (e & ZMASK);
           uxyz &= ~ZMASK;
           small.index[vy] += DSTSIZE;
+          cnt++;
         }
         if (unlikely(uxyz >> YZBITS != ux))
         { printf("OOPS3: id %d vx %d ux %d UXY %x\n", id, vx, ux, uxyz); exit(0); }
