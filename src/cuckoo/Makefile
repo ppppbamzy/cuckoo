@@ -24,6 +24,9 @@ leantest:       lean19x1
 
 meantest:	mean29x4
 	./mean29x4 -n 63 -t 4 -s
+	
+mymeantest:	my_mean29x4
+	./my_mean29x4 -n 63 -t 4 -s
 
 verifytest:     lean19x1 verify19
 	./lean19x1 -n 38 | grep ^Sol | ./verify19 -n 38
@@ -60,6 +63,9 @@ mean19x8:	cuckoo.h ../crypto/siphash.hpp mean.hpp mean.cpp Makefile
 
 mean29x4:	cuckoo.h ../crypto/siphash.hpp mean.hpp mean.cpp Makefile
 	$(GPP) -o $@ -mno-avx2 -DNSIPHASH=4 -DEDGEBITS=29 mean.cpp $(BLAKE_2B_SRC)
+
+my_mean29x4:	cuckoo.h ../crypto/siphash.hpp my_mean.hpp my_mean.cpp Makefile
+	$(GPP) -o $@ -mno-avx2 -DNSIPHASH=4 -DEDGEBITS=29 my_mean.cpp $(BLAKE_2B_SRC)
 
 mean29x8:	cuckoo.h ../crypto/siphash.hpp mean.hpp mean.cpp Makefile
 	$(GPP) -o $@ -mavx2 -DNSIPHASH=8 -DEDGEBITS=29 mean.cpp $(BLAKE_2B_SRC)
