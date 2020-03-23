@@ -727,6 +727,7 @@ public:
         for (u8 *rdsmall = readsmall; rdsmall < endreadsmall; rdsmall += DSTSIZE)
           degs[*(u32 *)rdsmall & ZMASK]++;
         u32 ux = 0;
+        int cnt = 0;
         for (u8 *rdsmall = readsmall; rdsmall < endreadsmall; rdsmall += DSTSIZE) {
 // bit     41/39..34    33..26     25..13     12..0
 // read       UXXXXX    UYYYYY     UZZZZZ     VZZZZ   within VX VY partition
@@ -737,8 +738,15 @@ public:
 // printf("id %d vx %d vy %d e %010lx suffUX %02x UX %x mask %x\n", id, vx, vy, e, (u32)(e >> YZZBITS), ux, SRCPREFMASK);
 // bit    41/39..34    33..21     20..13     12..0
 // write     VYYYYY    VZZZZZ     UYYYYY     UZZZZ   within UX partition
-          *(u64 *)(base+dst.index[ux]) = vy34 | ((e & ZMASK) << YZBITS) | ((e >> ZBITS) & YZMASK);
-          dst.index[ux] += degs[e & ZMASK] ? DSTSIZE : 0;
+          if (TRIMONV) {
+            *(u64 *)(buckets[ux][vx].bytes + cnt*DSTSIZE) = vy34 | ((e & ZMASK) << YZBITS) | ((e >> ZBITS) & YZMASK);
+            dst.index[ux] += degs[e & ZMASK] ? DSTSIZE : 0;
+            cnt += degs[e & ZMASK] ? 1 : 0;
+          } else {
+            *(u64 *)(buckets[vx][ux].bytes + cnt*DSTSIZE) = vy34 | ((e & ZMASK) << YZBITS) | ((e >> ZBITS) & YZMASK);
+            dst.index[ux] += degs[e & ZMASK] ? DSTSIZE : 0;
+            cnt += degs[e & ZMASK] ? 1 : 0;
+          }
         }
         if (unlikely(ux >> DSTPREFBITS != XMASK >> DSTPREFBITS))
         { printf("OOPS4: id %d vx %x ux %x vs %x\n", id, vx, ux, XMASK); }
