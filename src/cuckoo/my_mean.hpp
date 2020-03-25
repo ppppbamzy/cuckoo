@@ -705,10 +705,9 @@ public:
           uxyz += ((u32)(e >> YZBITS) - uxyz) & SRCPREFMASK;
 // if (round==6) printf("id %d vx %d ux %d e %010lx suffUXYZ %05x suffUXY %03x UXYZ %08x UXY %04x mask %x\n", id, vx, ux, e, (u32)(e >> YZBITS), (u32)(e >> YZZBITS), uxyz, uxyz>>ZBITS, SRCPREFMASK);
           const u32 vy = (e >> ZBITS) & YMASK;
-          u8 const *rawdata = tbuckets[id+vy][0].bytes;
 // bit     41/39..34    33..26     25..13     12..0
 // write      UXXXXX    UYYYYY     UZZZZZ     VZZZZ   within VX VY partition
-          (u64)rawdata[cnt*DSTSIZE] = ((u64)uxyz << ZBITS) | (e & ZMASK);
+          (u64)tbuckets[id][vy].bytes[cnt*DSTSIZE] = ((u64)uxyz << ZBITS) | (e & ZMASK);
           //*(u64 *)(tbuckets[id+vy][0].bytes + cnt*DSTSIZE) = ((u64)uxyz << ZBITS) | (e & ZMASK);
           uxyz &= ~ZMASK;
           small.index[vy] += DSTSIZE;
