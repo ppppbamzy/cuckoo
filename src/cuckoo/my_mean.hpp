@@ -979,6 +979,10 @@ public:
     barry.clear();
     thread_ctx *threads = new thread_ctx[nthreads];
     for (u32 t = 0; t < nthreads; t++) {
+      genUnodes(id, 0);
+      genVnodes(id, 1);
+    }
+    for (u32 t = 0; t < nthreads; t++) {
       threads[t].id = t;
       threads[t].et = this;
       int err = pthread_create(&threads[t].thread, NULL, etworker, (void *)&threads[t]);
@@ -1000,9 +1004,9 @@ public:
 #define EXPANDROUND COMPRESSROUND
 #endif
   void trimmer(u32 id) {
-    genUnodes(id, 0);
+    // genUnodes(id, 0);
     barrier();
-    genVnodes(id, 1);
+    // genVnodes(id, 1);
     for (u32 round = 2; round < ntrims-2; round += 2) {
       barrier();
       if (round < COMPRESSROUND) {
