@@ -18,6 +18,7 @@
 #include "../threads/barrier.hpp"
 #include "mean_params.hpp"
 #include "mean_structures.hpp"
+#include "mean_gennodes.hpp"
 
 // The matrix solver stores all edges in a matrix of NX * NX buckets,
 // where NX = 2^XBITS is the number of possible values of the 'X' bits.

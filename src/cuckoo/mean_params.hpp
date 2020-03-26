@@ -335,4 +335,7 @@ const u32 ZBUCKETSIZE = ZBUCKETSLOTS * BIGSIZE0;
 #endif
 const u32 TBUCKETSIZE = ZBUCKETSLOTS * BIGSIZE; 
 
+#define likely(x)   __builtin_expect((x)!=0, 1)
+#define unlikely(x) __builtin_expect((x), 0)
+
 #endif
