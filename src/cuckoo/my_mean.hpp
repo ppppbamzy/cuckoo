@@ -7,7 +7,7 @@
 // my own cycle finding is run single threaded to avoid losing cycles
 // to race conditions (typically takes under 1% of runtime)
 
-#include "cuckoo.h"
+#include "mean_params.hpp"
 #include "../crypto/siphashxN.h"
 #include <stdlib.h>
 #include <stdio.h>
@@ -22,13 +22,6 @@
 
 // EDGEBITS/NEDGES/EDGEMASK defined in cuckoo.h
 
-// The node bits are logically split into 3 groups:
-// XBITS 'X' bits (most significant), YBITS 'Y' bits, and ZBITS 'Z' bits (least significant)
-// Here we have the default XBITS=YBITS=7, ZBITS=15 summing to EDGEBITS=29
-// nodebits   XXXXXXX YYYYYYY ZZZZZZZZZZZZZZZ
-// bit%10     8765432 1098765 432109876543210
-// bit/10     2222222 2211111 111110000000000
-
 // The matrix solver stores all edges in a matrix of NX * NX buckets,
 // where NX = 2^XBITS is the number of possible values of the 'X' bits.
 // Edge i between nodes ui = siphash24(2*i) and vi = siphash24(2*i+1)
@@ -42,125 +35,6 @@
 // combined YZ values, allowing the remaining rounds to avoid the sorting on Y,
 // and directly count YZ values in a cache friendly 32KB.
 // A final pair of compression rounds remap YZ values from 15 into 11 bits.
-
-#ifndef XBITS
-// 7 seems to give best performance
-#define XBITS 7
-#endif
-
-#define YBITS XBITS
-
-// size in bytes of a big bucket entry
-#ifndef BIGSIZE
-#if EDGEBITS <= 15
-#define BIGSIZE 4
-// no compression needed
-#define COMPRESSROUND 0
-#else
-#define BIGSIZE 5
-// YZ compression round; must be even
-#ifndef COMPRESSROUND
-#define COMPRESSROUND 14
-#endif
-#endif
-#endif
-// size in bytes of a small bucket entry
-#define SMALLSIZE BIGSIZE
-
-// initial entries could be smaller at percent or two slowdown
-#ifndef BIGSIZE0
-#if EDGEBITS < 30 && !defined SAVEEDGES
-#define BIGSIZE0 4
-#else
-#define BIGSIZE0 BIGSIZE
-#endif
-#endif
-// but they may need syncing entries
-#if BIGSIZE0 == 4 && EDGEBITS > 27
-#define NEEDSYNC
-#endif
-
-typedef uint8_t u8;
-typedef uint16_t u16;
-typedef uint32_t u32;
-typedef uint64_t u64;
-
-#if EDGEBITS >= 30
-typedef u64 offset_t;
-#else
-typedef u32 offset_t;
-#endif
-
-#if BIGSIZE0 > 4
-typedef u64 BIGTYPE0;
-#else
-typedef u32 BIGTYPE0;
-#endif
-
-// node bits have two groups of bucketbits (X for big and Y for small) and a remaining group Z of degree bits
-const u32 NX        = 1 << XBITS;
-const u32 XMASK     = NX - 1;
-const u32 NY        = 1 << YBITS;
-const u32 YMASK     = NY - 1;
-const u32 XYBITS    = XBITS + YBITS;
-const u32 NXY       = 1 << XYBITS;
-const u32 ZBITS     = EDGEBITS - XYBITS;
-const u32 NZ        = 1 << ZBITS;
-const u32 ZMASK     = NZ - 1;
-const u32 YZBITS    = EDGEBITS - XBITS;
-const u32 NYZ       = 1 << YZBITS;
-const u32 YZMASK    = NYZ - 1;
-const u32 YZ1BITS   = YZBITS < 15 ? YZBITS : 15;  // compressed YZ bits
-const u32 NYZ1      = 1 << YZ1BITS;
-const u32 MAXNZNYZ1 = NYZ1 < NZ ? NZ : NYZ1;
-const u32 YZ1MASK   = NYZ1 - 1;
-const u32 Z1BITS    = YZ1BITS - YBITS;
-const u32 NZ1       = 1 << Z1BITS;
-const u32 Z1MASK    = NZ1 - 1;
-const u32 YZ2BITS   = YZBITS < 11 ? YZBITS : 11;  // more compressed YZ bits
-const u32 NYZ2      = 1 << YZ2BITS;
-const u32 YZ2MASK   = NYZ2 - 1;
-const u32 Z2BITS    = YZ2BITS - YBITS;
-const u32 NZ2       = 1 << Z2BITS;
-const u32 Z2MASK    = NZ2 - 1;
-const u32 YZZBITS   = YZBITS + ZBITS;
-const u32 YZZ1BITS  = YZ1BITS + ZBITS;
-
-const u32 BIGSLOTBITS   = BIGSIZE * 8;
-const u32 SMALLSLOTBITS = SMALLSIZE * 8;
-const u64 BIGSLOTMASK   = (1ULL << BIGSLOTBITS) - 1ULL;
-const u64 SMALLSLOTMASK = (1ULL << SMALLSLOTBITS) - 1ULL;
-const u32 BIGSLOTBITS0  = BIGSIZE0 * 8;
-const u64 BIGSLOTMASK0  = (1ULL << BIGSLOTBITS0) - 1ULL;
-const u32 NONYZBITS     = BIGSLOTBITS0 - YZBITS;
-const u32 NNONYZ        = 1 << NONYZBITS;
-
-// for p close to 0, Pr(X>=k) < e^{-n*p*eps^2} where k=n*p*(1+eps)
-// see https://en.wikipedia.org/wiki/Binomial_distribution#Tail_bounds
-// eps should be at least 1/sqrt(n*p/64)
-// to give negligible bad odds of e^-64.
-
-// 1/32 reduces odds of overflowing z bucket on 2^30 nodes to 2^14*e^-32
-// (less than 1 in a billion) in theory. not so in practice (fails first at mean30 -n 1549)
-// 3/64 works well for 29, would need to be enlarged to 1/16 for EDGEBITS=27
-#ifndef BIGEPS
-#define BIGEPS 3/64
-#endif
-
-// 176/256 is safely over 1-e(-1) ~ 0.63 trimming fraction
-#ifndef TRIMFRAC256
-#define TRIMFRAC256 176
-#endif
-
-const u32 NTRIMMEDZ  = NZ * TRIMFRAC256 / 256;
-
-const u32 ZBUCKETSLOTS = NZ + NZ * BIGEPS;
-#ifdef SAVEEDGES
-const u32 ZBUCKETSIZE = NTRIMMEDZ * (BIGSIZE + sizeof(u32));  // assumes EDGEBITS <= 32
-#else
-const u32 ZBUCKETSIZE = ZBUCKETSLOTS * BIGSIZE0; 
-#endif
-const u32 TBUCKETSIZE = ZBUCKETSLOTS * BIGSIZE; 
 
 template<u32 BUCKETSIZE>
 struct zbucket {
@@ -978,8 +852,8 @@ public:
     barry.clear();
     thread_ctx *threads = new thread_ctx[nthreads];
     for (u32 t = 0; t < nthreads; t++) {
-      genUnodes(id, 0);
-      genVnodes(id, 1);
+      genUnodes(t, 0);
+      genVnodes(t, 1);
     }
     for (u32 t = 0; t < nthreads; t++) {
       threads[t].id = t;
