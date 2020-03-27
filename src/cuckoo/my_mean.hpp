@@ -17,7 +17,7 @@
 #include <bitset>
 #include "../threads/barrier.hpp"
 #include "mean_params.hpp"
-#include "mean_structures.hpp"
+#include "mean_trimedges.hpp"
 #include "mean_gennodes.hpp"
 
 // The matrix solver stores all edges in a matrix of NX * NX buckets,
