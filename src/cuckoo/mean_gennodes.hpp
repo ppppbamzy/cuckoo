@@ -11,7 +11,7 @@
 #include <bitset>
 #include "../threads/barrier.hpp"
 #include "mean_params.hpp"
-#include "mean_structures.hpp"
+#include "mean_trimedges.hpp"
 
 void edgetrimmer::genUnodes(const u32 id, const u32 uorv) {
     u64 rdtsc0, rdtsc1;
