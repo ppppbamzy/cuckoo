@@ -1,5 +1,5 @@
-#ifndef MEAN_STRUCTURES_HPP
-#define MEAN_STRUCTURES_HPP
+#ifndef MEAN_TRIMEDGES_HPP
+#define MEAN_TRIMEDGES_HPP
 
 #include "../crypto/siphashxN.h"
 #include <stdlib.h>
