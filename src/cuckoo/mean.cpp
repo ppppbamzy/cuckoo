@@ -1,7 +1,7 @@
 // Cuckoo Cycle, a memory-hard proof-of-work
 // Copyright (c) 2013-2020 John Tromp
 
-#include "mean.hpp"
+#include "my_mean.hpp"
 #include <unistd.h>
 
 // arbitrary length of header hashed into siphash key
