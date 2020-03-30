@@ -7,7 +7,6 @@
 // my own cycle finding is run single threaded to avoid losing cycles
 // to race conditions (typically takes under 1% of runtime)
 
-#include "../crypto/siphashxN.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <pthread.h>
@@ -15,10 +14,11 @@
 #include <assert.h>
 #include <vector>
 #include <bitset>
-#include "../threads/barrier.hpp"
 #include "mean_params.hpp"
 #include "mean_trimedges.hpp"
 #include "mean_gennodes.hpp"
+#include "../crypto/siphashxN.h"
+#include "../threads/barrier.hpp"
 
 // The matrix solver stores all edges in a matrix of NX * NX buckets,
 // where NX = 2^XBITS is the number of possible values of the 'X' bits.

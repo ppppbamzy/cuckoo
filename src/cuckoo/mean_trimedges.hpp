@@ -1,7 +1,6 @@
 #ifndef MEAN_TRIMEDGES_HPP
 #define MEAN_TRIMEDGES_HPP
 
-#include "../crypto/siphashxN.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <pthread.h>
@@ -9,8 +8,9 @@
 #include <assert.h>
 #include <vector>
 #include <bitset>
-#include "../threads/barrier.hpp"
 #include "mean_params.hpp"
+#include "../crypto/siphashxN.h"
+#include "../threads/barrier.hpp"
 
 template<u32 BUCKETSIZE>
 struct zbucket {
@@ -197,8 +197,7 @@ public:
           const u32 vy = (e >> ZBITS) & YMASK;
 // bit     41/39..34    33..26     25..13     12..0
 // write      UXXXXX    UYYYYY     UZZZZZ     VZZZZ   within VX VY partition
-          (u64)tbuckets[id][vy].bytes[cnt*DSTSIZE] = ((u64)uxyz << ZBITS) | (e & ZMASK);
-          //*(u64 *)(tbuckets[id+vy][0].bytes + cnt*DSTSIZE) = ((u64)uxyz << ZBITS) | (e & ZMASK);
+          *(u64 *)(&tbuckets[id][vy].bytes[cnt*DSTSIZE]) = ((u64)uxyz << ZBITS) | (e & ZMASK);
           uxyz &= ~ZMASK;
           small.index[vy] += DSTSIZE;
           cnt++;

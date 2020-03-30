@@ -1,7 +1,6 @@
 #ifndef MEAN_GENNODES_HPP
 #define MEAN_GENNODES_HPP
 
-#include "../crypto/siphashxN.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <pthread.h>
@@ -9,9 +8,10 @@
 #include <assert.h>
 #include <vector>
 #include <bitset>
-#include "../threads/barrier.hpp"
 #include "mean_params.hpp"
 #include "mean_trimedges.hpp"
+#include "../crypto/siphashxN.h"
+#include "../threads/barrier.hpp"
 
 void edgetrimmer::genUnodes(const u32 id, const u32 uorv) {
     u64 rdtsc0, rdtsc1;
