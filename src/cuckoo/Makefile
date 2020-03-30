@@ -64,7 +64,7 @@ mean19x8:	cuckoo.h ../crypto/siphash.hpp mean.hpp mean.cpp Makefile
 mean29x4:	cuckoo.h ../crypto/siphash.hpp mean.hpp mean.cpp Makefile
 	$(GPP) -o $@ -mno-avx2 -DNSIPHASH=4 -DEDGEBITS=29 mean.cpp $(BLAKE_2B_SRC)
 
-my_mean29x4:	cuckoo.h ../crypto/siphash.hpp my_mean.hpp my_mean.cpp Makefile
+my_mean29x4:	cuckoo.h ../crypto/siphash.hpp mean_trimedges.hpp mean_gennodes.hpp mean_params.hpp my_mean.cpp Makefile
 	$(GPP) -o my_mean29x4 -mno-avx2 -DNSIPHASH=4 -DEDGEBITS=29 my_mean.cpp $(BLAKE_2B_SRC)
 
 mean29x8:	cuckoo.h ../crypto/siphash.hpp mean.hpp mean.cpp Makefile
