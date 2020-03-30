@@ -161,7 +161,7 @@ public:
   template <u32 SRCSIZE, u32 DSTSIZE, bool TRIMONV>
   void trimedges(const u32 id, const u32 round) {
     printf("第%3d线程，第%3d轮，", id, round);
-    printf("%s\n", TRIMONV ? "V节点" : "U节点")；
+    printf("%s\n", TRIMONV ? "V节点" : "U节点");
     const u32 SRCSLOTBITS = std::min(SRCSIZE * 8, 2 * YZBITS);
     const u64 SRCSLOTMASK = (1ULL << SRCSLOTBITS) - 1ULL;
     const u32 SRCPREFBITS = SRCSLOTBITS - YZBITS;
