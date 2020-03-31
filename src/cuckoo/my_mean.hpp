@@ -672,6 +672,7 @@ public:
 
   template <u32 SRCSIZE, u32 DSTSIZE, bool TRIMONV>
   void trimedges(const u32 id, const u32 round) {
+    if (!id) printf("trimedges 于第%3d轮\n", round);
     const u32 SRCSLOTBITS = std::min(SRCSIZE * 8, 2 * YZBITS);
     const u64 SRCSLOTMASK = (1ULL << SRCSLOTBITS) - 1ULL;
     const u32 SRCPREFBITS = SRCSLOTBITS - YZBITS;
@@ -751,6 +752,7 @@ public:
 
   template <u32 SRCSIZE, u32 DSTSIZE, bool TRIMONV>
   void trimrename(const u32 id, const u32 round) {
+    if (!id) printf("trimrename 于第%3d轮\n", round);
     const u32 SRCSLOTBITS = std::min(SRCSIZE * 8, (TRIMONV ? YZBITS : YZ1BITS) + YZBITS);
     const u64 SRCSLOTMASK = (1ULL << SRCSLOTBITS) - 1ULL;
     const u32 SRCPREFBITS = SRCSLOTBITS - YZBITS;
@@ -858,6 +860,7 @@ public:
 
   template <bool TRIMONV>
   void trimedges1(const u32 id, const u32 round) {
+    if (!id) printf("trimedges1 于第%3d轮\n", round);
     u64 rdtsc0, rdtsc1;
     indexer<ZBUCKETSIZE> dst;
   
@@ -903,6 +906,7 @@ public:
 
   template <bool TRIMONV>
   void trimrename1(const u32 id, const u32 round) {
+    if (!id) printf("trimrename1 于第%3d轮\n", round);
     u64 rdtsc0, rdtsc1;
     indexer<ZBUCKETSIZE> dst;
     u32 maxnnid = 0;
