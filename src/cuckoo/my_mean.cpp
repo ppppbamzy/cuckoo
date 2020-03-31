@@ -1,10 +1,11 @@
 // Cuckoo Cycle, a memory-hard proof-of-work
 // Copyright (c) 2013-2020 John Tromp
 
-#include "mean_findcycles.hpp"
-#include "mean_gennodes.hpp"
-#include "mean_params.hpp"
-#include "mean_trimedges.hpp"
+// #include "mean_findcycles.hpp"
+// #include "mean_gennodes.hpp"
+// #include "mean_params.hpp"
+// #include "mean_trimedges.hpp"
+#include "my_mean.hpp"
 #include <unistd.h>
 
 // arbitrary length of header hashed into siphash key
