@@ -696,6 +696,9 @@ public:
       for (u32 ux = 0 ; ux < NX; ux++) {
         u32 uxyz = ux << YZBITS;
         zbucket<ZBUCKETSIZE> &zb = TRIMONV ? buckets[ux][vx] : buckets[vx][ux];
+        if (round == 2 && ux == 0 && vx == startvx) {
+          printf("初始时桶[%d][%d]的size为 %d\n", ux, vx, zb.size);
+        }
         const u8 *readbig = zb.bytes, *endreadbig = readbig + zb.size;
 // printf("id %d vx %d ux %d size %u\n", id, vx, ux, zb.size/SRCSIZE);
         for (; readbig < endreadbig; readbig += SRCSIZE) {
