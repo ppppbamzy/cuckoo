@@ -968,8 +968,19 @@ public:
 
   void trim() {
     void *etworker(void *vp);
+    void *gnworker(void *vp);
     barry.clear();
     thread_ctx *threads = new thread_ctx[nthreads];
+    for (u32 t = 0; t < nthreads; t++) {
+      threads[t].id = t;
+      threads[t].et = this;
+      int err = pthread_create(&threads[t].thread, NULL, gnworker, (void *)&threads[t]);
+      assert(err == 0);
+    }
+    for (u32 t = 0; t < nthreads; t++) {
+      int err = pthread_join(threads[t].thread, NULL);
+      assert(err == 0);
+    }
     for (u32 t = 0; t < nthreads; t++) {
       threads[t].id = t;
       threads[t].et = this;
@@ -991,10 +1002,41 @@ public:
 #define BIGGERSIZE BIGSIZE
 #define EXPANDROUND COMPRESSROUND
 #endif
-  void trimmer(u32 id) {
+  void gennodes(u32 id) {
     genUnodes(id, 0);
     barrier();
     genVnodes(id, 1);
+    // for (u32 round = 2; round < ntrims-2; round += 2) {
+    //   barrier();
+    //   if (round < COMPRESSROUND) {
+    //     if (round < EXPANDROUND)
+    //       trimedges<BIGSIZE, BIGSIZE, true>(id, round);
+    //     else if (round == EXPANDROUND)
+    //       trimedges<BIGSIZE, BIGGERSIZE, true>(id, round);
+    //     else trimedges<BIGGERSIZE, BIGGERSIZE, true>(id, round);
+    //   } else if (round==COMPRESSROUND) {
+    //     trimrename<BIGGERSIZE, BIGGERSIZE, true>(id, round);
+    //   } else trimedges1<true>(id, round);
+    //   barrier();
+    //   if (round < COMPRESSROUND) {
+    //     if (round+1 < EXPANDROUND)
+    //       trimedges<BIGSIZE, BIGSIZE, false>(id, round+1);
+    //     else if (round+1 == EXPANDROUND)
+    //       trimedges<BIGSIZE, BIGGERSIZE, false>(id, round+1);
+    //     else trimedges<BIGGERSIZE, BIGGERSIZE, false>(id, round+1);
+    //   } else if (round==COMPRESSROUND) {
+    //     trimrename<BIGGERSIZE, sizeof(u32), false>(id, round+1);
+    //   } else trimedges1<false>(id, round+1);
+    // }
+    // barrier();
+    // trimrename1<true >(id, ntrims-2);
+    // barrier();
+    // trimrename1<false>(id, ntrims-1);
+  }
+  void trimmer(u32 id) {
+    // genUnodes(id, 0);
+    // barrier();
+    // genVnodes(id, 1);
     for (u32 round = 2; round < ntrims-2; round += 2) {
       barrier();
       if (round < COMPRESSROUND) {
@@ -1023,6 +1065,13 @@ public:
     trimrename1<false>(id, ntrims-1);
   }
 };
+
+void *gnworker(void *vp) {
+  thread_ctx *tp = (thread_ctx *)vp;
+  tp->et->gennodes(tp->id);
+  pthread_exit(NULL);
+  return 0;
+}
 
 void *etworker(void *vp) {
   thread_ctx *tp = (thread_ctx *)vp;
