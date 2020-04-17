@@ -19,4 +19,22 @@
 
 #### 在 `trimedges` 函数中
 
-在 `trimedges` 函数中一条边用 5 个字节 = 40 比特记录。以当前处理 v 节点为例，初始时一条边记录为 `( uy后3位 || uz全15位 || vy全7位 || vz全15位 )`。在前后两条边的 `uy` 值相差 8 以内时可以通过差值累加恢复出完整的 `uy` 值。此后边被放入临时存储 `tbuckets[id][vy]` 中，其记录形式改变为 `( ux后3位 || uy全7位 || uz全15位 || vz全15位 )`。在前后两条边的 `ux` 值相差 8 以内时可以通过差值累加恢复出完整的 `ux` 值。
+在 `trimedges` 函数中一条边用 5 个字节 = 40 比特记录。以当前处理 v 节点为例，初始时一条边记录为 `( uy后3位 || uz全15位 || vy全7位 || vz全15位 )`：
+
+```
+十位：333 333333322222222 2211111 111110000000000
+个位：987 654321098765432 1098765 432109876543210
+     UUU UUUUUUUUUUUUUUU VVVVVVV VVVVVVVVVVVVVVV
+     YYY ZZZZZZZZZZZZZZZ YYYYYYY ZZZZZZZZZZZZZZZ
+```
+
+在前后两条边的 `uy` 值相差 8 以内时可以通过差值累加恢复出完整的 `uy` 值。此后边被放入临时存储 `tbuckets[id][vy]` 中，其记录形式改变为 `( ux后3位 || uy全7位 || uz全15位 || vz全15位 )`：
+
+```
+十位：333 3333333 222222222211111 111110000000000
+个位：987 6543210 987654321098765 432109876543210
+     UUU UUUUUUU UUUUUUUUUUUUUUU VVVVVVVVVVVVVVV
+     XXX YYYYYYY ZZZZZZZZZZZZZZZ ZZZZZZZZZZZZZZZ
+```
+
+在前后两条边的 `ux` 值相差 8 以内时可以通过差值累加恢复出完整的 `ux` 值。
