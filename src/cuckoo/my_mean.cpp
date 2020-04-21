@@ -68,7 +68,7 @@ int main(int argc, char **argv) {
     printf("-%d", nonce+range-1);
   printf(") with 50%% edges\n");
 
-  solver_ctx ctx(header, nthreads, ntrims, allrounds, showcycle);
+  solver_ctx ctx(header);
 
   u64 sbytes = ctx.sharedbytes();
   u32 tbytes = ctx.threadbytes();
