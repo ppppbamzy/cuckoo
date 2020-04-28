@@ -229,16 +229,7 @@ struct indexer {
 #define likely(x)   __builtin_expect((x)!=0, 1)
 #define unlikely(x) __builtin_expect((x), 0)
 
-#define BYTE_TO_BINARY_PATTERN "%c%c%c%c%c%c%c%c"
-#define BYTE_TO_BINARY(byte)  \
-  (byte & 0x80 ? '1' : '0'), \
-  (byte & 0x40 ? '1' : '0'), \
-  (byte & 0x20 ? '1' : '0'), \
-  (byte & 0x10 ? '1' : '0'), \
-  (byte & 0x08 ? '1' : '0'), \
-  (byte & 0x04 ? '1' : '0'), \
-  (byte & 0x02 ? '1' : '0'), \
-  (byte & 0x01 ? '1' : '0') 
+#define NSIPHASH 4
 
 class trimmer_ctx; // avoid circular references
 
@@ -332,17 +323,26 @@ public:
     const u32   endy = NY * (id+1) / nthreads;
     u32 edge = starty << YZBITS, endedge = edge + NYZ;
 #if NSIPHASH == 4
-    const __m128i vxmask = _mm_set1_epi64x(XMASK);
-    const __m128i vyzmask = _mm_set1_epi64x(YZMASK);
-    __m128i v0, v1, v2, v3, v4, v5, v6, v7;
+    // const __m128i vxmask = _mm_set1_epi64x(XMASK);
+    int64_t vxmask[] = {XMASK, XMASK};
+    // const __m128i vyzmask = _mm_set1_epi64x(YZMASK);
+    int64_t vyzmask[] = {YZMASK, YZMASK};
+    // __m128i v0, v1, v2, v3, v4, v5, v6, v7;
+    int64_t v0[2], v1[2], v2[2], v3[2], v4[2], v5[2], v6[2], v7[2];
     const u32 e2 = 2 * edge + uorv;
-    __m128i vpacket0 = _mm_set_epi64x(e2+2, e2+0);
-    __m128i vpacket1 = _mm_set_epi64x(e2+6, e2+4);
-    const __m128i vpacketinc = _mm_set1_epi64x(8);
+    // __m128i vpacket0 = _mm_set_epi64x(e2+2, e2+0);
+    int64_t vpacket0[] = {e2+0, e2+2};
+    // __m128i vpacket1 = _mm_set_epi64x(e2+6, e2+4);
+    int64_t vpacket1[] = {e2+4, e2+6};
+    // const __m128i vpacketinc = _mm_set1_epi64x(8);
+    int64_t vpacketinc[] = {8, 8};
     u64 e1 = edge;
-    __m128i vhi0 = _mm_set_epi64x((e1+1)<<YZBITS, (e1+0)<<YZBITS);
-    __m128i vhi1 = _mm_set_epi64x((e1+3)<<YZBITS, (e1+2)<<YZBITS);
-    const __m128i vhiinc = _mm_set1_epi64x(4<<YZBITS);
+    // __m128i vhi0 = _mm_set_epi64x((e1+1)<<YZBITS, (e1+0)<<YZBITS);
+    int64_t vhi0[] = {((e1+0)<<YZBITS), ((e1+1)<<YZBITS)};
+    // __m128i vhi1 = _mm_set_epi64x((e1+3)<<YZBITS, (e1+2)<<YZBITS);
+    int64_t vhi1[] = {((e1+2)<<YZBITS), ((e1+3)<<YZBITS)};
+    // const __m128i vhiinc = _mm_set1_epi64x(4<<YZBITS);
+    int64_t vhiinc[] = {(4<<YZBITS), (4<<YZBITS)};
 #elif NSIPHASH == 8
     const __m256i vxmask = _mm256_set1_epi64x(XMASK);
     const __m256i vyzmask = _mm256_set1_epi64x(YZMASK);
@@ -386,12 +386,17 @@ public:
         }
 #endif
 #elif NSIPHASH == 4
-        v7 = v3 = _mm_set1_epi64x(sip_keys.k3);
-        v4 = v0 = _mm_set1_epi64x(sip_keys.k0);
-        v5 = v1 = _mm_set1_epi64x(sip_keys.k1);
-        v6 = v2 = _mm_set1_epi64x(sip_keys.k2);
+        // v7 = v3 = _mm_set1_epi64x(sip_keys.k3);
+        // v4 = v0 = _mm_set1_epi64x(sip_keys.k0);
+        // v5 = v1 = _mm_set1_epi64x(sip_keys.k1);
+        // v6 = v2 = _mm_set1_epi64x(sip_keys.k2);
+        v7[0] = v7[1] = v3[0] = v3[1] = sip_keys.k3;
+        v4[0] = v4[1] = v0[0] = v0[1] = sip_keys.k0;
+        v5[0] = v5[1] = v1[0] = v1[1] = sip_keys.k1;
+        v6[0] = v6[1] = v2[0] = v2[1] = sip_keys.k2;
 
-        v3 = XOR(v3,vpacket0); v7 = XOR(v7,vpacket1);
+        // v3 = XOR(v3,vpacket0); v7 = XOR(v7,vpacket1);
+        v3[0] ^= vpacket0[0]; v3[1] ^= vpacket0[1]; v7[0] ^= vpacket1[0]; v7[1] ^= vpacket1[1];
         SIPROUNDX2N; SIPROUNDX2N;
         v0 = XOR(v0,vpacket0); v4 = XOR(v4,vpacket1);
         v2 = XOR(v2, _mm_set1_epi64x(0xffLL));
@@ -503,10 +508,15 @@ public:
     u64 rdtsc0, rdtsc1;
 #if NSIPHASH == 4
     const __m128i vxmask = _mm_set1_epi64x(XMASK);
+    // int64_t vxmask[] = {XMASK, XMASK};
     const __m128i vyzmask = _mm_set1_epi64x(YZMASK);
+    // int64_t vyzmask[] = {YZMASK, YZMASK};
     const __m128i ff = _mm_set1_epi64x(0xffLL);
+    // int64_t ff[] = {0xffLL, 0xffLL};
     __m128i v0, v1, v2, v3, v4, v5, v6, v7;
+    // int64_t v0[2], v1[2], v2[2], v3[2], v4[2], v5[2], v6[2], v7[2];
     __m128i vpacket0, vpacket1, vhi0, vhi1;
+    // int64_t vpacket0[2], vpacket1[2], vhi0[2], vhi1[2];
 #elif NSIPHASH == 8
     const __m256i vxmask = _mm256_set1_epi64x(XMASK);
     const __m256i vyzmask = _mm256_set1_epi64x(YZMASK);
@@ -591,6 +601,7 @@ public:
         int64_t uy34 = (int64_t)uy << YZZBITS;
 #if NSIPHASH == 4
         const __m128i vuy34 = _mm_set1_epi64x(uy34);
+        int64_t vuy34[] = {}
         const __m128i vuorv = _mm_set1_epi64x(uorv);
         for (; readedge <= edges-NSIPHASH; readedge += NSIPHASH, readz += NSIPHASH) {
           v4 = v0 = _mm_set1_epi64x(sip_keys.k0);
